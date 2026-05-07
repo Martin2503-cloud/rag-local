@@ -1,0 +1,47 @@
+[project]
+name = "rag-local"
+version = "0.1.0"
+description = "Local Semantic Search with RAG - Buscador semántico local con RAG"
+requires-python = ">=3.10"
+readme = "README.md"
+authors = [
+    {name = "Martín"}
+]
+keywords = ["rag", "semantic-search", "embedding", "faiss", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "langchain>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langchain-huggingface>=0.1.0",
+    "sentence-transformers>=3.0.0",
+    "faiss-cpu>=1.8.0",
+    "pymupdf>=1.24.0",
+    "tiktoken>=0.7.0",
+    "numpy>=1.26.0",
+]
+
+[project.optional-dependencies]
+openai = [
+    "openai>=1.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.scripts]
+rag = "rag.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/martin/rag-local"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
