@@ -21,7 +21,7 @@ class TestVectorStore:
                 metadata={"filename": f"doc{i}.txt", "type": "txt"}
             )
             chunk.embedding = np.random.rand(384).astype(np.float32)
-            np.linalg.norm(chunk.embedding, normalize=True)
+            chunk.embedding = chunk.embedding / np.linalg.norm(chunk.embedding)
             chunks.append(chunk)
         return chunks
 

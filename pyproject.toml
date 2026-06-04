@@ -43,5 +43,8 @@ rag = "rag.cli:main"
 Homepage = "https://github.com/martin/rag-local"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

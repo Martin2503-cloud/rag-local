@@ -6,7 +6,7 @@ manejables de tamaño fijo, usando RecursiveCharacterTextSplitter de LangChain.
 El chunking es crítico para la calidad de la búsqueda semántica.
 """
 from typing import List
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from rag.types import DocumentChunk, RAGConfig
 
 
