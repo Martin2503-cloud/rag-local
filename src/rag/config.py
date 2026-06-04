@@ -17,7 +17,7 @@ def get_default_config() -> RAGConfig:
     - chunk_size=750: Balance entre contexto y precisión
     - chunk_overlap=112 (15%): Preserva continuidad semántica entre chunks
     - all-MiniLM-L6-v2: Modelo pequeño (80MB) y rápido, sin API key
-    - similarity_threshold=0.7: Filtra ruido efectivamente
+    - similarity_threshold=0.35: Balance entre recall y precisión
     - top_k=4: Suficientes resultados diversos
     
     Returns:
@@ -27,7 +27,7 @@ def get_default_config() -> RAGConfig:
         chunk_size=750,
         chunk_overlap=112,
         embedding_model="sentence-transformers/all-MiniLM-L6-v2",
-        similarity_threshold=0.7,
+        similarity_threshold=0.35,
         top_k=4,
         index_path=str(Path("data/index").resolve()),
         openai_api_key=os.environ.get("OPENAI_API_KEY"),

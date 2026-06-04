@@ -56,7 +56,7 @@ class RAGConfig:
     chunk_size: int = 750
     chunk_overlap: int = 112
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
-    similarity_threshold: float = 0.7
+    similarity_threshold: float = 0.35
     top_k: int = 4
     index_path: str = "data/index"
     openai_api_key: Optional[str] = None
