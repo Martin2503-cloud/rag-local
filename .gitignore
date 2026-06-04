@@ -36,3 +36,6 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+# SSH keys
+key-github
+key-github.pub
