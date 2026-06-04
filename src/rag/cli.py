@@ -183,9 +183,9 @@ def main():
                 args.pop(idx)
 
         query_text = " ".join(args)
-        if use_llm and not RAGConfig().openai_api_key:
+        if use_llm and not load_config().openai_api_key:
             print("Error: OPENAI_API_KEY no está configurada.")
-            print("Configurá la variable de entorno o pasala en RAGConfig.")
+            print("Configurá la variable de entorno: OPENAI_API_KEY")
             sys.exit(1)
 
         rag = RAGSystem(use_llm=use_llm)
