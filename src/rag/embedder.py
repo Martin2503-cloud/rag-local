@@ -44,7 +44,10 @@ class Embedder:
         """
         self.config = config
         self.model = SentenceTransformer(config.embedding_model)
-        self.dimension = self.model.get_sentence_embedding_dimension()
+        try:
+            self.dimension = self.model.get_embedding_dimension()
+        except AttributeError:
+            self.dimension = self.model.get_sentence_embedding_dimension()
 
     def embed(self, texts: List[str]) -> np.ndarray:
         """

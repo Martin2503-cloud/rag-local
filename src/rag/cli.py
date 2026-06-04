@@ -58,12 +58,13 @@ class RAGSystem:
         >>> print(response)
     """
     
-    def __init__(self, config: Optional[RAGConfig] = None):
+    def __init__(self, config: Optional[RAGConfig] = None, use_llm: bool = False):
         """
         Inicializa el sistema RAG.
         
         Args:
             config: Configuración personalizada (None usa default).
+            use_llm: Si True, inicializa el cliente OpenAI si hay API key.
         """
         self.config = config or load_config()
         self.loader = DocumentLoader()
@@ -71,8 +72,18 @@ class RAGSystem:
         self.embedder = Embedder(self.config)
         self.vectorstore = VectorStore(self.embedder.dimension)
         self.search = SemanticSearch(self.embedder, self.vectorstore, self.config)
+
         self.llm_client: Optional[OpenAI] = None
-        self.generator = RAGGenerator(self.vectorstore, self.search, self.config)
+        if use_llm and self.config.openai_api_key:
+            try:
+                self.llm_client = OpenAI(api_key=self.config.openai_api_key)
+            except Exception:
+                pass
+
+        self.generator = RAGGenerator(
+            self.vectorstore, self.search, self.config,
+            llm_client=self.llm_client,
+        )
 
     def load_index(self) -> None:
         """
@@ -112,44 +123,17 @@ class RAGSystem:
         """
         Procesa una consulta del usuario.
         
-        El pipeline:
-        1. Embedding de la query
-        2. Búsqueda en FAISS
-        3. Generación (si hay LLM) o retorno de contexto
-        4. Formateo con fuentes
+        Delega en el RAGGenerator que maneja todo el pipeline:
+        búsqueda, generación (con o sin LLM), y formateo con fuentes.
         
         Args:
             query: Pregunta del usuario.
             
         Returns:
-            Respuesta formateada con fuentes cited.
+            Respuesta formateada con fuentes citadas.
         """
-        context, results = self.search.search_with_context(query)
-        
-        if not results:
-            return "No tengo información relevante para responder esa pregunta."
-        
-        if self.llm_client:
-            from rag.generator import RAG_PROMPT
-            prompt = RAG_PROMPT.format(context=context, question=query)
-            response = self.llm_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.3,
-            )
-            llm_response = response.choices[0].message.content
-        else:
-            llm_response = context
-        
-        sources = list(dict.fromkeys(r.source for r in results))
-        
-        response = llm_response
-        if sources:
-            response += "\n\nFuentes:\n"
-            for i, source in enumerate(sources, 1):
-                response += f"- [{i}] {source}\n"
-        
-        return response
+        response, sources = self.generator.generate(query)
+        return self.generator.format_response(query, response, sources)
 
 
 def main():
@@ -157,18 +141,20 @@ def main():
     Entry point de la CLI.
     
     Uso:
-        rag ingest <archivo>  - Ingesta documento
-        rag query <pregunta>  - Consulta el sistema
+        rag ingest <archivo>           - Ingesta documento
+        rag query <pregunta> [--llm]   - Consulta el sistema
+                                         --llm: usa OpenAI para generar respuesta
     
     Ejemplos:
         python rag.py ingest docs/manual.pdf
         python rag.py query cómo inicio sesión
+        python rag.py query cómo inicio sesión --llm openai
     """
     if len(sys.argv) < 2:
         print("Usage: rag <command> [args]")
         print("Commands:")
-        print("  ingest <file>   - Ingest a document")
-        print("  query <text>   - Query the system")
+        print("  ingest <file>            - Ingest a document")
+        print("  query <text> [--llm]     - Query the system")
         sys.exit(1)
 
     cmd = sys.argv[1]
@@ -177,7 +163,7 @@ def main():
         if len(sys.argv) < 3:
             print("Usage: rag ingest <file>")
             sys.exit(1)
-        file_path = sys.argv[2]
+        file_path = " ".join(sys.argv[2:])
         rag = RAGSystem()
         count = rag.ingest(file_path)
         print(f"Ingested {count} chunks from {file_path}")
@@ -186,8 +172,23 @@ def main():
         if len(sys.argv) < 3:
             print("Usage: rag query <text>")
             sys.exit(1)
-        query_text = " ".join(sys.argv[2:])
-        rag = RAGSystem()
+
+        args = sys.argv[2:]
+        use_llm = False
+        if "--llm" in args:
+            idx = args.index("--llm")
+            use_llm = True
+            args.pop(idx)
+            if idx < len(args) and args[idx] == "openai":
+                args.pop(idx)
+
+        query_text = " ".join(args)
+        if use_llm and not RAGConfig().openai_api_key:
+            print("Error: OPENAI_API_KEY no está configurada.")
+            print("Configurá la variable de entorno o pasala en RAGConfig.")
+            sys.exit(1)
+
+        rag = RAGSystem(use_llm=use_llm)
         rag.load_index()
         response = rag.query(query_text)
         print(response)
