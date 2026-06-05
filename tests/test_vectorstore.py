@@ -1,4 +1,5 @@
 import pytest
+import os
 import tempfile
 import numpy as np
 from rag.vectorstore import VectorStore
@@ -84,3 +85,40 @@ class TestVectorStore:
         results_low = store.search(query_emb, k=5, threshold=0.1)
 
         assert len(results_high) <= len(results_low)
+
+    def test_single_chunk(self, store):
+        chunk = DocumentChunk(content="single", metadata={"filename": "solo.txt"})
+        chunk.embedding = np.random.rand(384).astype(np.float32)
+        store.add([chunk])
+
+        assert store.count() == 1
+        results = store.search(chunk.embedding, k=5, threshold=0.0)
+        assert len(results) == 1
+
+    def test_add_multiple_times(self, store, sample_chunks):
+        store.add(sample_chunks[:2])
+        store.add(sample_chunks[2:])
+
+        assert store.count() == 5
+
+    def test_search_k_larger_than_index(self, store, sample_chunks):
+        store.add(sample_chunks[:2])
+
+        query_emb = sample_chunks[0].embedding
+        results = store.search(query_emb, k=10, threshold=0.0)
+
+        assert len(results) == 2
+
+    def test_load_nonexistent_path(self):
+        new_store = VectorStore()
+
+        with pytest.raises(FileNotFoundError):
+            new_store.load("C:\\nonexistent\\path")
+
+    def test_save_without_adding(self, store):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store.save(tmpdir)
+            index_file = os.path.join(tmpdir, "vectors.index")
+            meta_file = os.path.join(tmpdir, "metadata.json")
+            assert os.path.exists(meta_file)
+            assert not os.path.exists(index_file)

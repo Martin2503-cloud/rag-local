@@ -88,3 +88,27 @@ class TestRAGGenerator:
 
         assert "LLM response" in response
         mock_client.chat.completions.create.assert_called_once()
+
+    def test_generate_empty_query(self, generator_no_llm):
+        response, sources = generator_no_llm.generate("")
+
+        assert isinstance(response, str)
+        assert len(response) > 0
+
+    def test_format_response_with_query_parameter(self, generator_no_llm):
+        formatted = generator_no_llm.format_response("test query", "Some response", [])
+
+        assert "Some response" in formatted
+
+    def test_generate_with_llm_uses_model_from_config(self, vectorstore, search, config):
+        config.llm_model = "custom-model"
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_response.choices = [Mock(message=Mock(content="response"))]
+        mock_client.chat.completions.create.return_value = mock_response
+
+        gen = RAGGenerator(vectorstore, search, config, llm_client=mock_client)
+        gen.generate("test")
+
+        _, kwargs = mock_client.chat.completions.create.call_args
+        assert kwargs["model"] == "custom-model"

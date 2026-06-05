@@ -68,3 +68,40 @@ class TestDocumentLoader:
         assert ".pdf" in formats
         assert ".md" in formats
         assert ".txt" in formats
+
+    def test_load_empty_file(self, loader, temp_dir):
+        md_path = os.path.join(temp_dir, "empty.md")
+        with open(md_path, "w", encoding="utf-8") as f:
+            f.write("")
+
+        chunks = loader.load(md_path)
+
+        assert len(chunks) == 1
+        assert chunks[0].content == ""
+
+    def test_load_whitespace_only(self, loader, temp_dir):
+        txt_path = os.path.join(temp_dir, "spaces.txt")
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write("   \n\n  \n")
+
+        chunks = loader.load(txt_path)
+
+        assert len(chunks) == 1
+        assert chunks[0].content.strip() == ""
+
+    def test_load_unicode_content(self, loader, temp_dir):
+        md_path = os.path.join(temp_dir, "unicode.md")
+        with open(md_path, "w", encoding="utf-8") as f:
+            f.write("# Mémoire Technique\n\nÉléments de configuration.\n\nCaracteres: ñ á é í ó ú")
+
+        chunks = loader.load(md_path)
+
+        assert len(chunks) == 1
+        assert "Mémoire" in chunks[0].content
+        assert "ñ" in chunks[0].content
+        assert chunks[0].metadata["type"] == "md"
+
+    def test_load_nonexistent_file(self, loader):
+        import fitz
+        with pytest.raises(fitz.FileNotFoundError):
+            loader.load("C:\\nonexistent\\file.pdf")
