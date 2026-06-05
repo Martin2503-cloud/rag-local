@@ -43,11 +43,22 @@ rag ingest ./data/documentos
 rag search "tu consulta aquí"
 ```
 
-### Consulta con RAG (usando OpenAI)
+### Consulta con RAG (usando LLM)
 
 ```bash
-rag query "tu pregunta" --llm openai
+# Usando OpenAI (requiere OPENAI_API_KEY)
+rag query "tu consulta" --llm openai
+
+# Usando Groq (gratis, requiere GROQ_API_KEY)
+rag query "tu consulta" --llm groq
 ```
+
+## Variables de Entorno
+
+| Variable | Descripción |
+|----------|-------------|
+| `OPENAI_API_KEY` | API key de OpenAI (para `--llm openai`) |
+| `GROQ_API_KEY` | API key de Groq (para `--llm groq`, gratis en https://console.groq.com) |
 
 ## Configuración
 
@@ -101,7 +112,8 @@ pytest tests/ --cov=rag --cov-report=html
 - **sentence-transformers**: Embeddings locales
 - **faiss-cpu**: Búsqueda vectorial
 - **pymupdf**: Extracción de PDF
-- **openai** (opcional): Para generación de respuestas
+- **openai** (opcional): Para generación de respuestas con OpenAI
+- **groq** (opcional): Para generación de respuestas con Groq (gratis, registrarse en https://console.groq.com)
 
 ## Licencia
 

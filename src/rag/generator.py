@@ -100,7 +100,7 @@ class RAGGenerator:
         if self.llm_client:
             prompt = RAG_PROMPT.format(context=context, question=query)
             response = self.llm_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=self.config.llm_model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.3,
             )

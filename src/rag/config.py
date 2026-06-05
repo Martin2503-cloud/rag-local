@@ -31,6 +31,7 @@ def get_default_config() -> RAGConfig:
         top_k=4,
         index_path=str(Path("data/index").resolve()),
         openai_api_key=os.environ.get("OPENAI_API_KEY"),
+        groq_api_key=os.environ.get("GROQ_API_KEY"),
     )
 
 

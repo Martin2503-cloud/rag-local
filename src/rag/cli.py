@@ -58,13 +58,14 @@ class RAGSystem:
         >>> print(response)
     """
     
-    def __init__(self, config: Optional[RAGConfig] = None, use_llm: bool = False):
+    def __init__(self, config: Optional[RAGConfig] = None, use_llm: bool = False, llm_provider: str = "openai"):
         """
         Inicializa el sistema RAG.
         
         Args:
             config: Configuración personalizada (None usa default).
-            use_llm: Si True, inicializa el cliente OpenAI si hay API key.
+            use_llm: Si True, inicializa el cliente LLM.
+            llm_provider: "openai" o "groq".
         """
         self.config = config or load_config()
         self.loader = DocumentLoader()
@@ -74,11 +75,22 @@ class RAGSystem:
         self.search = SemanticSearch(self.embedder, self.vectorstore, self.config)
 
         self.llm_client: Optional[OpenAI] = None
-        if use_llm and self.config.openai_api_key:
-            try:
-                self.llm_client = OpenAI(api_key=self.config.openai_api_key)
-            except Exception:
-                pass
+        if use_llm:
+            self.config.llm_provider = llm_provider
+            if llm_provider == "groq" and self.config.groq_api_key:
+                try:
+                    self.llm_client = OpenAI(
+                        base_url="https://api.groq.com/openai/v1",
+                        api_key=self.config.groq_api_key,
+                    )
+                    self.config.llm_model = "llama-3.3-70b-versatile"
+                except Exception:
+                    pass
+            elif llm_provider == "openai" and self.config.openai_api_key:
+                try:
+                    self.llm_client = OpenAI(api_key=self.config.openai_api_key)
+                except Exception:
+                    pass
 
         self.generator = RAGGenerator(
             self.vectorstore, self.search, self.config,
@@ -141,20 +153,21 @@ def main():
     Entry point de la CLI.
     
     Uso:
-        rag ingest <archivo>           - Ingesta documento
-        rag query <pregunta> [--llm]   - Consulta el sistema
-                                         --llm: usa OpenAI para generar respuesta
+        rag ingest <archivo>                    - Ingesta documento
+        rag query <pregunta> [--llm <provider>]  - Consulta el sistema
+                                         provider: openai | groq
     
     Ejemplos:
         python rag.py ingest docs/manual.pdf
         python rag.py query cómo inicio sesión
         python rag.py query cómo inicio sesión --llm openai
+        python rag.py query cómo inicio sesión --llm groq
     """
     if len(sys.argv) < 2:
         print("Usage: rag <command> [args]")
         print("Commands:")
-        print("  ingest <file>            - Ingest a document")
-        print("  query <text> [--llm]     - Query the system")
+        print("  ingest <file>                     - Ingest a document")
+        print("  query <text> [--llm <provider>]   - Query the system")
         sys.exit(1)
 
     cmd = sys.argv[1]
@@ -175,20 +188,28 @@ def main():
 
         args = sys.argv[2:]
         use_llm = False
+        llm_provider = "openai"
         if "--llm" in args:
             idx = args.index("--llm")
             use_llm = True
             args.pop(idx)
-            if idx < len(args) and args[idx] == "openai":
+            if idx < len(args) and args[idx] in ("openai", "groq"):
+                llm_provider = args[idx]
                 args.pop(idx)
 
         query_text = " ".join(args)
-        if use_llm and not load_config().openai_api_key:
-            print("Error: OPENAI_API_KEY no está configurada.")
-            print("Configurá la variable de entorno: OPENAI_API_KEY")
-            sys.exit(1)
+        config = load_config()
+        if use_llm:
+            if llm_provider == "openai" and not config.openai_api_key:
+                print("Error: OPENAI_API_KEY no está configurada.")
+                print("Configurá la variable de entorno: OPENAI_API_KEY")
+                sys.exit(1)
+            if llm_provider == "groq" and not config.groq_api_key:
+                print("Error: GROQ_API_KEY no está configurada.")
+                print("Configurá la variable de entorno: GROQ_API_KEY")
+                sys.exit(1)
 
-        rag = RAGSystem(use_llm=use_llm)
+        rag = RAGSystem(use_llm=use_llm, llm_provider=llm_provider)
         rag.load_index()
         response = rag.query(query_text)
         print(response)

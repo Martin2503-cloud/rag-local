@@ -60,3 +60,6 @@ class RAGConfig:
     top_k: int = 4
     index_path: str = "data/index"
     openai_api_key: Optional[str] = None
+    groq_api_key: Optional[str] = None
+    llm_provider: str = "openai"
+    llm_model: str = "gpt-4o-mini"
