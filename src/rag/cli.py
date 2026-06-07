@@ -118,12 +118,16 @@ class RAGSystem:
         4. Agregar al índice
         5. Persistir a disco
         
+        Nota: carga el índice existente antes de agregar, para no
+        sobrescribir documentos previamente ingestados.
+        
         Args:
             path: Ruta al archivo a ingestar.
             
         Returns:
             Número de chunks creados.
         """
+        self.load_index()
         docs = self.loader.load(path)
         chunks = self.chunker.chunk_documents(docs)
         chunks = self.embedder.embed_chunks(chunks)
