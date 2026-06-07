@@ -7,11 +7,12 @@ Genera tres gráficos a partir del índice FAISS persistido:
      de ejemplo.
 
 Uso:
-    python visualize_vectors.py
+    python visualize_vectors.py [--query "texto de consulta"]
 
 Requiere el virtualenv del proyecto activado y el índice FAISS existente en data/index/.
 """
 
+import argparse
 import os
 from pathlib import Path
 
@@ -211,11 +212,20 @@ def plot_score_analysis(
 
 def main() -> None:
     """Punto de entrada: carga datos y genera los tres gráficos de visualización."""
+    parser = argparse.ArgumentParser(description="Visualiza embeddings del RAG local.")
+    parser.add_argument(
+        "--query",
+        type=str,
+        default="framework ETL Coppel",
+        help='Query de ejemplo para el análisis de scores (default: "framework ETL Coppel")',
+    )
+    args = parser.parse_args()
+
     config, store, index, embeddings, filenames, pages = load_store()
 
     plot_embedding_2d(embeddings, filenames)
     plot_similarity_heatmap(embeddings, filenames, pages)
-    plot_score_analysis(config, index, embeddings, pages)
+    plot_score_analysis(config, index, embeddings, pages, query=args.query)
 
     print(f"\nGenerado en: {os.getcwd()}")
     print("  - rag_embeddings_2d.png")
