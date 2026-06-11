@@ -29,7 +29,7 @@ class Embedder:
         model: Instancia del modelo de sentence-transformers.
         dimension: Dimensionalidad del espaço de embeddings (384).
     
-    Example:
+    Ejemplo de uso:
         >>> embedder = Embedder(config)
         >>> query_emb = embedder.embed_query("cómo funciona el sistema")
         >>> print(query_emb.shape)  # (384,)

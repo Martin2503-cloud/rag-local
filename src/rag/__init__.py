@@ -3,7 +3,7 @@ RAG Local - Buscador Semántico con Retrieval-Augmented Generation.
 
 Sistema de búsqueda semántica local que permite consultar documentación
 técnica usando lenguaje natural. No requiere API externa (usa embeddings
-locales) y puede usar OpenAI para generación de respuestas.
+locales) y puede usar OpenAI o Groq para generación de respuestas.
 
 Módulos:
 - types: Definiciones de tipos (DocumentChunk, SearchResult, RAGConfig)
