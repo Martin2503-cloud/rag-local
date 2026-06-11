@@ -80,7 +80,7 @@ def plot_embedding_2d(embeddings: np.ndarray, filenames: list[str]) -> str:
     colors = plt.cm.tab10(np.linspace(0, 1, len(unique_files)))
     file_to_color = {f: colors[i] for i, f in enumerate(unique_files)}
 
-    plt.figure(figsize=(14, 6))
+    plt.figure(figsize=(14, 6.5))
 
     plt.subplot(1, 2, 1)
     for f in unique_files:
@@ -103,7 +103,14 @@ def plot_embedding_2d(embeddings: np.ndarray, filenames: list[str]) -> str:
     plt.ylabel("t-SNE 2")
     plt.grid(alpha=0.3)
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.10, 1, 1])
+    plt.figtext(
+        0.5, 0.01,
+        "PCA: Reduce 384 dimensiones a 2D preservando la máxima varianza. "
+        "t-SNE: Proyección no-lineal que preserva vecindarios locales (perplexity=30). "
+        "Cada color = un documento. Puntos cercanos = chunks semánticamente similares.",
+        ha="center", fontsize=7, wrap=True,
+    )
     out_path = "rag_embeddings_2d.png"
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
@@ -135,12 +142,20 @@ def plot_similarity_heatmap(embeddings: np.ndarray, filenames: list[str], pages:
 
     vmin = float(sim_matrix.min())
     vmax = float(sim_matrix.max())
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(10, 8.5))
     plt.imshow(sim_matrix, cmap="viridis", vmin=vmin, vmax=vmax)
     plt.colorbar(label="Similaridad del Coseno")
     plt.title(f"Matriz de Similaridad - {n_sample} chunks (escala: [{vmin:.2f}, {vmax:.2f}])")
     plt.xlabel("Chunk index")
     plt.ylabel("Chunk index")
+    plt.tight_layout(rect=[0, 0.08, 1, 1])
+    plt.figtext(
+        0.5, 0.01,
+        "Similaridad del Coseno = cos(θ) = (A·B) / (||A||·||B||). Rango: [-1, 1].\n"
+        "1 = vectores idénticos, 0 = ortogonales (sin relación), <0 = opuestos.\n"
+        "Bloques diagonales = chunks del mismo documento (ordenados por archivo y página).",
+        ha="center", fontsize=7, wrap=True,
+    )
     out_path = "rag_similarity_heatmap.png"
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
@@ -177,7 +192,7 @@ def plot_score_analysis(
 
     all_scores, _ = index.search(query_emb.reshape(1, -1), len(embeddings))
 
-    plt.figure(figsize=(12, 4))
+    plt.figure(figsize=(12, 4.5))
 
     plt.subplot(1, 2, 1)
     plt.hist(all_scores[0], bins=30, alpha=0.7, edgecolor="black")
@@ -187,7 +202,7 @@ def plot_score_analysis(
         linestyle="--",
         label=f"threshold={config.similarity_threshold}",
     )
-    plt.xlabel("Score")
+    plt.xlabel("Score (similaridad coseno con la query)")
     plt.ylabel("Cantidad de chunks")
     plt.title(f'Distribución de Scores: "{query}"')
     plt.legend()
@@ -199,12 +214,20 @@ def plot_score_analysis(
         p_vals, s_vals = zip(*valid)
         plt.scatter(p_vals, s_vals, alpha=0.5, s=10)
         plt.axhline(config.similarity_threshold, color="red", linestyle="--")
-        plt.xlabel("Página")
+        plt.xlabel("Página del documento")
         plt.ylabel("Score")
         plt.title(f'Score por Página: "{query}"')
         plt.grid(alpha=0.3)
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.15, 1, 1])
+    plt.figtext(
+        0.5, 0.01,
+        "Score = similaridad coseno entre el embedding de la query y el de cada chunk.\n"
+        "La línea roja (threshold) filtra chunks irrelevantes: solo los que están a la derecha (histograma) "
+        "o arriba (score por página) superan el filtro.\n"
+        "Score por página ayuda a identificar qué secciones del documento contienen la información buscada.",
+        ha="center", fontsize=7, wrap=True,
+    )
     out_path = "rag_score_analysis.png"
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close()
