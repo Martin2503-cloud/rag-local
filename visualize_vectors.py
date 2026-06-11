@@ -133,10 +133,12 @@ def plot_similarity_heatmap(embeddings: np.ndarray, filenames: list[str], pages:
     norm = sample_emb / np.linalg.norm(sample_emb, axis=1, keepdims=True)
     sim_matrix = norm @ norm.T
 
+    vmin = float(sim_matrix.min())
+    vmax = float(sim_matrix.max())
     plt.figure(figsize=(10, 8))
-    plt.imshow(sim_matrix, cmap="viridis", vmin=0, vmax=1)
+    plt.imshow(sim_matrix, cmap="viridis", vmin=vmin, vmax=vmax)
     plt.colorbar(label="Similaridad del Coseno")
-    plt.title(f"Matriz de Similaridad - {n_sample} chunks")
+    plt.title(f"Matriz de Similaridad - {n_sample} chunks (escala: [{vmin:.2f}, {vmax:.2f}])")
     plt.xlabel("Chunk index")
     plt.ylabel("Chunk index")
     out_path = "rag_similarity_heatmap.png"
